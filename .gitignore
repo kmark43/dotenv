@@ -1,0 +1,6 @@
+# Claude Code internal state
+*.jsonl
+
+# Local overrides (not tracked)
+*.local
+.devcontainer/overrides.json

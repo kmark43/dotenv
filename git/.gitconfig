@@ -1,0 +1,24 @@
+[include]
+  path = ~/.gitconfig.local
+
+[color]
+  ui = auto
+
+[core]
+  editor = vim
+  autocrlf = input
+
+[init]
+  defaultBranch = main
+
+[push]
+  autoSetupRemote = true
+
+[pull]
+  rebase = true
+
+[merge]
+  conflictstyle = diff3
+
+[diff]
+  colorMoved = default

@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
-# Copy .devcontainer from this repo into ~/Projects/PROJECT_NAME/.devcontainer,
+# Copy .devcontainer from this repo into ~/projects/PROJECT_NAME/.devcontainer,
 # preserving existing overrides.json. If overrides.json exists, run merge to update devcontainer.json.
 # Usage: install-devcontainer.sh PROJECT_NAME
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE="$SCRIPT_DIR/.devcontainer"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+SOURCE="$REPO_DIR/.devcontainer"
 PROJECT_NAME="${1:-}"
 
 if [[ -z "$PROJECT_NAME" ]]; then
   echo "Usage: install-devcontainer.sh PROJECT_NAME" >&2
-  echo "  Copies .devcontainer into ~/Projects/PROJECT_NAME/.devcontainer" >&2
+  echo "  Copies .devcontainer into ~/projects/PROJECT_NAME/.devcontainer" >&2
   echo "  Does not overwrite existing overrides.json. Runs merge if overrides.json exists." >&2
   exit 1
 fi
 
-PROJECT_DIR="$HOME/Projects/$PROJECT_NAME"
+PROJECT_DIR="$HOME/projects/$PROJECT_NAME"
 DEST="$PROJECT_DIR/.devcontainer"
 
 if [[ ! -d "$PROJECT_DIR" ]]; then

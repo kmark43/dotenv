@@ -48,21 +48,28 @@ symlink() {
 if [ "$MINIMAL" = false ]; then
   header "Installing system packages"
 
-  PACKAGES=(git curl jq tmux vim neovim zsh)
-  # ripgrep package name varies
-  RG_PKG=""
+  PACKAGES=(git curl jq tmux vim neovim zsh python3 python3-venv)
   FZF_PKG="fzf"
+
+  # Detect Java package name (apt vs brew)
+  if command -v apt-get &>/dev/null; then
+    PACKAGES+=(openjdk-21-jdk)
+  elif command -v brew &>/dev/null; then
+    PACKAGES+=(openjdk@21)
+  fi
 
   missing=()
   for pkg in "${PACKAGES[@]}"; do
     cmd="$pkg"
-    # Map package names to commands
     case "$pkg" in
       neovim) cmd="nvim" ;;
+      python3-venv) dpkg -s python3-venv &>/dev/null 2>&1 && continue || missing+=("$pkg"); continue ;;
+      openjdk-21-jdk) java --version &>/dev/null 2>&1 && continue || missing+=("$pkg"); continue ;;
+      openjdk@21) java --version &>/dev/null 2>&1 && continue || missing+=("$pkg"); continue ;;
     esac
     command -v "$cmd" &>/dev/null || missing+=("$pkg")
   done
-  command -v rg &>/dev/null || { missing+=("ripgrep"); RG_PKG="ripgrep"; }
+  command -v rg &>/dev/null || missing+=("ripgrep")
   command -v fzf &>/dev/null || missing+=("$FZF_PKG")
 
   if [ ${#missing[@]} -eq 0 ]; then
@@ -115,7 +122,47 @@ if [ "$MINIMAL" = false ]; then
   fi
 
   # ---------------------------------------------------------------------------
-  # 3. devcontainer CLI
+  # 3. nvm + Node.js
+  # ---------------------------------------------------------------------------
+
+  header "Installing nvm + Node.js"
+
+  export NVM_DIR="$HOME/.nvm"
+
+  if [ -d "$NVM_DIR" ]; then
+    skip "nvm"
+  else
+    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+    ok "nvm"
+  fi
+
+  # Load nvm for the rest of this script
+  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+  if command -v node &>/dev/null; then
+    skip "Node.js ($(node --version))"
+  else
+    nvm install --lts
+    ok "Node.js ($(node --version))"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # 4. pnpm
+  # ---------------------------------------------------------------------------
+
+  header "Installing pnpm"
+
+  if command -v pnpm &>/dev/null; then
+    skip "pnpm"
+  else
+    corepack enable
+    corepack prepare pnpm@latest --activate
+    ok "pnpm"
+  fi
+  mkdir -p "$HOME/.local/share/pnpm"
+
+  # ---------------------------------------------------------------------------
+  # 5. devcontainer CLI
   # ---------------------------------------------------------------------------
 
   header "Installing devcontainer CLI"
@@ -123,19 +170,13 @@ if [ "$MINIMAL" = false ]; then
   if command -v devcontainer &>/dev/null; then
     skip "devcontainer CLI"
   else
-    if command -v npm &>/dev/null; then
-      npm install -g @devcontainers/cli
-    else
-      info "npm not found — skipping devcontainer CLI (install Node.js first)"
-    fi
-    # Ensure pnpm store dir exists so devcontainer mount doesn't create as root
-    mkdir -p "$HOME/.local/share/pnpm"
+    npm install -g @devcontainers/cli
     ok "devcontainer CLI"
   fi
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Symlink dotfiles
+# 6. Symlink dotfiles
 # ---------------------------------------------------------------------------
 
 header "Symlinking dotfiles"
@@ -145,7 +186,7 @@ symlink "$DOTFILES_DIR/vim/.vimrc"      "$HOME/.vimrc"
 symlink "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 # ---------------------------------------------------------------------------
-# 5. Zsh aliases
+# 7. Zsh aliases
 # ---------------------------------------------------------------------------
 
 header "Symlinking zsh aliases"
@@ -171,14 +212,14 @@ else
   {
     echo ""
     echo "$MARKER_START"
-    cat "$DOTFILES_DIR/zsh/.zshrc"
+    echo "source \"$DOTFILES_DIR/zsh/.zshrc\""
     echo "$MARKER_END"
   } >> "$HOME/.zshrc"
-  ok "Appended dotenv config to ~/.zshrc"
+  ok "Appended dotenv loader to ~/.zshrc"
 fi
 
 # ---------------------------------------------------------------------------
-# 6. Claude Code toolkit
+# 8. Claude Code toolkit
 # ---------------------------------------------------------------------------
 
 header "Installing Claude Code agents & commands"

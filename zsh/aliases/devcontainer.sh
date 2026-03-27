@@ -1,6 +1,6 @@
 # Dev Container CLI aliases
-# Source this from your .zshrc: source ~/Projects/bash-scripts/devcontainer-aliases.sh
-# Requires: devcontainer CLI installed (run install-devcontainer-cli.sh)
+# Sourced automatically via dotenv bootstrap (symlinked to ~/.zsh/aliases/)
+# Requires: devcontainer CLI installed (bootstrap.sh handles this)
 
 # Open a dev container in the current directory (mounts cwd, starts container, opens shell)
 dc() {
@@ -8,7 +8,7 @@ dc() {
   dir="$(pwd)"
   if [[ ! -d "$dir/.devcontainer" && ! -f "$dir/.devcontainer.json" ]]; then
     echo "No .devcontainer or .devcontainer.json in $dir" >&2
-    echo "Copy .devcontainer from ~/Projects/bash-scripts or add one to this project." >&2
+    echo "Copy .devcontainer from ~/projects/dotenv or add one to this project." >&2
     return 1
   fi
   devcontainer up --workspace-folder "$dir" && devcontainer exec --workspace-folder "$dir" "${SHELL:-/bin/bash}"

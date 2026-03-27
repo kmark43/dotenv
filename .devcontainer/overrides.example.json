@@ -1,0 +1,6 @@
+{
+  "//": "Copy this to overrides.json and customize. Run merge-devcontainer.sh to apply.",
+  "features": {},
+  "forwardPorts": [],
+  "containerEnv": {}
+}

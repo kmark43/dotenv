@@ -1,10 +1,10 @@
 Write architecture design(s) for: $ARGUMENTS
 
 Arguments can be:
-- A number: `/design 3` — top N "Spec Ready" tasks from Linear
+- A number: `/design 3` — top N "Spec Ready" tasks from Plane
 - Task IDs: `/design PROJ-123,PROJ-456` or `/design PROJ-123 | PROJ-456` — specific tasks (comma or `|` separated)
 - Multiple names: `/design "user auth" | "push notifications"` — each searched independently
-- A single feature name: `/design "user authentication"` — search Linear, confirm match
+- A single feature name: `/design "user authentication"` — search Plane, confirm match
 - A spec path: `/design docs/specs/user-auth/v1.md` — use directly
 
 ## Instructions
@@ -12,12 +12,12 @@ Arguments can be:
 ### Step 1: Resolve the task/spec list
 
 **If given a number N:**
-- Search Linear for top N tasks with status "Spec Ready" (by backlog priority order)
+- Search Plane for top N tasks with status "Spec Ready" (by backlog priority order)
 - Display the list and wait for confirmation
 
 **If given task IDs (comma or `|` separated):**
 - Split on `,` or ` | ` to get individual IDs
-- Fetch each from Linear, read spec path from `**Spec:**` field in task description
+- Fetch each from Plane, read spec path from `**Spec:**` field in task description
 - Display confirmed list and wait
 
 **If given multiple names (`|` separated):**
@@ -43,8 +43,8 @@ Arguments can be:
 Run in a fresh subagent with clean context. Do not carry context from a prior spec session.
 
 **3a. Resolve spec path**
-- From the Linear task `**Spec:**` field, or from the directly provided path
-- If no spec path found in Linear task, report and stop
+- From the Plane task `**Spec:**` field, or from the directly provided path
+- If no spec path found in Plane task, report and stop
 
 **3b. Check for existing design**
 - Check `docs/designs/<feature-slug>/` for an existing design
@@ -84,13 +84,13 @@ The architect operates in 4 phases — the command must not short-circuit any of
   Repeat until approved.
 
 **3e. On approval**
-- Linear task status → "Design Ready"
-- Design file path added to Linear task as comment
+- Plane task status → "Design Ready"
+- Design file path added to Plane task as comment
 - Output:
   ```
   ## Design Approved — PROJ-123: [title]
   File: docs/designs/<feature-slug>/vN.md
-  Linear: updated
+  Plane: updated
   ```
 
 **3f. Offer to continue to implementation (optional)**
@@ -184,7 +184,7 @@ Review each design. For each, respond with:
 ```
 
 Process the user's response:
-- **Approved designs:** Update Linear (status → "Design Ready", add design path as comment)
+- **Approved designs:** Update Plane (status → "Design Ready", add design path as comment)
 - **Designs with feedback:** Write feedback to `docs/designs/<slug>/_feedback.md`
 
 #### Phase 5: Parallel revision (background, conditional)

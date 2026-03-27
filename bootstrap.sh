@@ -246,6 +246,19 @@ if [ "$MINIMAL" = false ]; then
   fi
 
   # ---------------------------------------------------------------------------
+  # Claude Code
+  # ---------------------------------------------------------------------------
+
+  header "Installing Claude Code"
+
+  if command -v claude &>/dev/null; then
+    skip "Claude Code"
+  else
+    curl -fsSL https://claude.ai/install.sh | sh
+    ok "Claude Code"
+  fi
+
+  # ---------------------------------------------------------------------------
   # 5. devcontainer CLI
   # ---------------------------------------------------------------------------
 

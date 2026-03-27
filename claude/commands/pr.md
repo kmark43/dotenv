@@ -3,7 +3,7 @@ Create pull request(s) for feature worktrees: $ARGUMENTS
 Arguments can be:
 - No argument: create PR for the current branch (must be a feature branch)
 - A branch name: `/pr feature/PROJ-123-user-auth`
-- A Linear task ID: `/pr PROJ-123`
+- A Plane task ID: `/pr PROJ-123`
 - A feature name: `/pr "user authentication"` — searches active worktrees/branches
 - `all`: create PRs for all worktrees with status "Awaiting PR" (QA passed, no PR yet)
 
@@ -13,7 +13,7 @@ Arguments can be:
 
 **No argument or branch name:** use the current branch or specified branch directly.
 
-**Linear task ID or feature name:**
+**Plane task ID or feature name:**
 - Match to an active worktree/branch (same lookup as `/worktrees`)
 - Confirm the match before proceeding
 
@@ -37,7 +37,7 @@ Arguments can be:
 - Find the design file: `docs/designs/<slug>/vN.md` — read Key Decisions and Risks Flagged
 - Find the QA report: `docs/qa/<slug>-vN-review.md` — read the Summary and any open complexity concerns
 - Find the spec file: `docs/specs/<slug>/vN.md` — read Goals and Acceptance Criteria
-- Get the Linear task URL (if available)
+- Get the Plane task URL (if available)
 
 **Push the branch if not already pushed:**
 ```bash
@@ -65,14 +65,14 @@ gh pr create \
 [QA report verdict + any complexity concerns worth noting]
 
 ## References
-- Linear: [task URL]
+- Plane: [task URL]
 - Spec: docs/specs/<slug>/vN.md
 - Design: docs/designs/<slug>/vN.md
 - QA Report: docs/qa/<slug>-vN-review.md
 ```
 
 **After PR is created:**
-- Update Linear task status to "In Review" (if not already)
+- Update Plane task status to "In Review" (if not already)
 - Output the PR URL
 
 ### Step 3: Final output
@@ -83,7 +83,7 @@ gh pr create \
 - PROJ-123: User Auth → [PR URL]
 - PROJ-456: Push Notifications → [PR URL]
 
-Linear: statuses updated to "In Review"
+Plane: statuses updated to "In Review"
 ```
 
 If any branch failed (not pushed, conflicts, etc.) report it separately so you can handle it manually.

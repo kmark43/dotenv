@@ -11,7 +11,7 @@ Use this command for bug fixes and small contained tasks that don't require a PM
 
 ### Step 1: Resolve the task
 
-**If given a task ID:** fetch it from Linear directly.
+**If given a task ID:** fetch it from Plane directly.
 
 **If given a name or description:**
 - Search prioritized backlog first, then full backlog
@@ -51,7 +51,7 @@ Wait for the user to choose before proceeding.
 
 Use the `developer` agent with ONLY this context:
 - `CLAUDE.md`
-- The Linear task title and full description (this is the "spec")
+- The Plane task title and full description (this is the "spec")
 - Relevant existing source files needed for the fix
 
 Do NOT pass:
@@ -61,7 +61,7 @@ Do NOT pass:
 
 Instruct the developer to:
 1. Read `CLAUDE.md` for project conventions
-2. Treat the Linear task description as the full requirement
+2. Treat the Plane task description as the full requirement
 3. Implement the fix — minimal, targeted, no scope creep
 4. If the fix turns out to require structural changes, new API surfaces, or data model changes — STOP and escalate:
    ```
@@ -80,7 +80,7 @@ Instruct the developer to:
 
 After dev completes (without escalation), use the `qa` agent with ONLY this context:
 - `CLAUDE.md`
-- The Linear task title and description (tests against stated expected behavior)
+- The Plane task title and description (tests against stated expected behavior)
 - The implementation summary from Step 3
 - Read access to the codebase
 
@@ -99,7 +99,7 @@ Instruct QA to:
 If QA verdict is FAIL, use the `developer` agent again with ONLY:
 - `CLAUDE.md`
 - The QA report
-- The Linear task description (for expected behavior reference)
+- The Plane task description (for expected behavior reference)
 - Relevant source files
 
 Same escalation rule applies — if fixing the QA issues requires structural changes, stop and escalate.
@@ -110,7 +110,7 @@ After dev fix completes, run QA again to verify the fixes didn't introduce new i
 
 Use the `qa` agent with ONLY:
 - `CLAUDE.md`
-- The Linear task title and description (tests against stated expected behavior)
+- The Plane task title and description (tests against stated expected behavior)
 - The dev fix summary from Step 5
 - Read access to the codebase
 
@@ -123,10 +123,10 @@ Instruct QA to:
 
 **If this QA also fails:** loop back to Step 5 (Dev Fix) → Step 5b (Final QA). Repeat until QA passes or 3 total fix cycles have been attempted. After 3 failed cycles, stop and report to the user for intervention.
 
-### Step 6: Update Linear
+### Step 6: Update Plane
 
 On completion:
-- Update Linear task status to "In Review"
+- Update Plane task status to "In Review"
 - Add a brief comment: what was changed and QA result
 
 Output a summary:
@@ -135,7 +135,7 @@ Output a summary:
 
 - Dev: [N files changed]
 - QA: [PASS | FAIL → fixed → verified PASS]
-- Linear: status → In Review
+- Plane: status → In Review
 
 QA report: docs/qa/<slug>-fix-review.md
 Ready for your review.

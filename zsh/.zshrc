@@ -24,5 +24,8 @@ for f in ~/.zsh/aliases/*.sh(N); do
   source "$f"
 done
 
+# Claude MCP credentials
+[ -f ~/.claude/.env ] && set -a && source ~/.claude/.env && set +a
+
 # Machine-specific overrides (not tracked in dotfiles)
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local

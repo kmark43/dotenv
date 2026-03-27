@@ -3,11 +3,11 @@ Run the full implementation pipeline for one or more features: $ARGUMENTS
 Arguments are flexible — provide as much or as little as you want:
 - A design path: `/feature docs/designs/user-auth/v1.md`
 - A spec path: `/feature docs/specs/user-auth/v1.md`
-- A Linear task ID: `/feature PROJ-123`
+- A Plane task ID: `/feature PROJ-123`
 - A feature name or description: `/feature "user authentication"`
 - Multiple features (pipe-separated): `/feature "user auth" | "push notifications"`
 - Multiple task IDs: `/feature PROJ-123,PROJ-456` or `/feature PROJ-123 | PROJ-456`
-- A number: `/feature 3` — top N "Design Ready" tasks from Linear
+- A number: `/feature 3` — top N "Design Ready" tasks from Plane
 - Nothing: `/feature` — will ask what to work on
 
 ## Instructions
@@ -24,22 +24,22 @@ Each stage uses a fresh subagent. No history passes between stages.
 ### Resolve the feature list
 
 **If given a number N:**
-- Search Linear for top N tasks with status "Design Ready" (by backlog priority order)
+- Search Plane for top N tasks with status "Design Ready" (by backlog priority order)
 - Display the list and wait for confirmation
 
 **If given task IDs (comma or `|` separated):**
-- Fetch each from Linear, read design path from `**Design:**` field
+- Fetch each from Plane, read design path from `**Design:**` field
 - Display confirmed list and wait
 
 **If given multiple names/paths (`|` separated):**
-- Resolve each independently (fuzzy match designs → specs → Linear)
+- Resolve each independently (fuzzy match designs → specs → Plane)
 - Display confirmed list and wait
 
 **If given a single name/description:**
 - Fuzzy match against:
   1. `docs/designs/` directory — find designs whose filename or title matches
   2. `docs/specs/` directory — find specs whose filename or title matches
-  3. Linear backlog — search by name/description
+  3. Plane backlog — search by name/description
 - If **one match**: confirm and proceed as single feature
 - If **multiple matches** (2-3): present them and ask:
   ```
@@ -361,7 +361,7 @@ Spec: docs/specs/<slug>/vN.md
 QA: docs/qa/<slug>-vN-review.md"
 ```
 
-Update Linear task status to "In Review".
+Update Plane task status to "In Review".
 
 ---
 

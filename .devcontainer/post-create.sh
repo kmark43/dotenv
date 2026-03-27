@@ -76,11 +76,30 @@ if [ -f "$HOST_CLAUDE/settings.json" ]; then
 elif [ -f "$DOTENV/claude/settings.json" ]; then
   cp "$DOTENV/claude/settings.json" "$HOME/.claude/settings.json"
 fi
+# settings.local.json (per-machine overrides, not in dotenv repo)
+if [ -f "$HOST_CLAUDE/settings.local.json" ]; then
+  cp "$HOST_CLAUDE/settings.local.json" "$HOME/.claude/settings.local.json"
+  chmod 600 "$HOME/.claude/settings.local.json"
+fi
+# .env (MCP credentials, not in dotenv repo)
+if [ -f "$HOST_CLAUDE/.env" ]; then
+  cp "$HOST_CLAUDE/.env" "$HOME/.claude/.env"
+  chmod 600 "$HOME/.claude/.env"
+fi
 
 # --- Claude Code CLI ---
 if ! command -v claude &>/dev/null; then
-  npm install -g @anthropic-ai/claude-code
+  curl -fsSL https://claude.ai/install.sh | sh
 fi
+
+# --- MCP servers ---
+# uv (Python package runner, needed for stdio-based MCP servers)
+if ! command -v uv &>/dev/null; then
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+# Plane (project management) — runs via uvx at launch, just verify uv works
+command -v uvx &>/dev/null && uvx --help &>/dev/null
 
 # --- Claude Code agents, commands, docs ---
 mkdir -p "$HOME/.claude/agents" "$HOME/.claude/commands"

@@ -1,18 +1,18 @@
 Write PM spec(s) for: $ARGUMENTS
 
 Arguments can be:
-- A number: `/spec 3` — top N prioritized tasks from Linear backlog
+- A number: `/spec 3` — top N prioritized tasks from Plane backlog
 - Task IDs: `/spec PROJ-123,PROJ-456` or `/spec PROJ-123 | PROJ-456` — specific tasks (comma or `|` separated)
 - Multiple descriptions: `/spec "user auth" | "push notifications" | "dark mode"` — each searched/created independently
-- A single task name/description: `/spec "user authentication"` — search Linear, confirm match
-- A feature description with no Linear task: `/spec "add push notifications"` — create new Linear task
+- A single task name/description: `/spec "user authentication"` — search Plane, confirm match
+- A feature description with no Plane task: `/spec "add push notifications"` — create new Plane task
 
 ## Instructions
 
 ### Step 1: Resolve the task list
 
 **If given a number N:**
-- Search Linear for the top N prioritized backlog tasks
+- Search Plane for the top N prioritized backlog tasks
 - Display the list and wait for confirmation before proceeding:
   ```
   Top N backlog tasks:
@@ -23,7 +23,7 @@ Arguments can be:
 
 **If given task IDs (comma or `|` separated):**
 - Split on `,` or ` | ` to get individual IDs
-- Fetch each from Linear, display the list, wait for confirmation
+- Fetch each from Plane, display the list, wait for confirmation
 
 **If given multiple descriptions (`|` separated):**
 - Split on ` | ` to get individual descriptions
@@ -38,7 +38,7 @@ Arguments can be:
   2. PROJ-456: [title]
   Which did you mean? (or confirm #1)
   ```
-- If no match found: confirm with user that no Linear task exists, then offer to create one after spec is frozen
+- If no match found: confirm with user that no Plane task exists, then offer to create one after spec is frozen
 
 ### Step 2: Determine execution mode
 
@@ -52,13 +52,13 @@ Arguments can be:
 Run in a fresh subagent with clean context.
 
 **3a. Check for existing spec**
-- Read the Linear task description for a `**Spec:**` field
+- Read the Plane task description for a `**Spec:**` field
 - If a spec file exists, show it and ask: amend (new version) or skip?
 
 **3b. Activate the `pm` agent with ONLY:**
 - `CLAUDE.md`
 - `README.md` (if it contains product context)
-- The Linear task title and description
+- The Plane task title and description
 - Any existing related specs from `docs/specs/`
 
 Do NOT pass: code, architecture docs, other tasks' specs, prior conversation history
@@ -76,22 +76,22 @@ After the PM finishes writing the spec (no open questions remaining), output:
 File: docs/specs/<feature-slug>/v1.md
 
 Please review the spec. When ready:
-- Approve to freeze, update Linear, and optionally move to design
+- Approve to freeze, update Plane, and optionally move to design
 - Or give feedback to revise
 ```
 
-Wait for the user to read and respond. Do NOT update Linear yet.
+Wait for the user to read and respond. Do NOT update Plane yet.
 
 **3e. On approval**
 - User says "approved", "lgtm", "freeze it", etc.
 - PM sets status to "Ready for Architect"
-- Linear task updated: summary fields (Problem, Goals, AC, spec path) copied in, status → "Spec Ready"
-- If no Linear task existed: create one now with the summary
+- Plane task updated: summary fields (Problem, Goals, AC, spec path) copied in, status → "Spec Ready"
+- If no Plane task existed: create one now with the summary
 - Then immediately ask:
 ```
 ## Spec Frozen — PROJ-123: [title]
 File: docs/specs/<feature-slug>/v1.md
-Linear: updated
+Plane: updated
 
 Run /design for this spec now? (y/n)
 ```
@@ -109,7 +109,7 @@ Parallelizes writing while keeping Q&A interactive for quality. Each task mainta
 For each task, check for existing specs first (same as 3a). Then spawn one background `pm` subagent per task simultaneously. Each receives ONLY:
 - `CLAUDE.md`
 - `README.md` (if it contains product context)
-- The Linear task title and description
+- The Plane task title and description
 - Any existing related specs from `docs/specs/`
 - **Instruction:** Read all context, identify open questions and ambiguities, write them to `docs/specs/<slug>/_questions.md`. Do NOT write a spec yet. Do NOT ask the user — write questions to the file and terminate.
 
@@ -147,7 +147,7 @@ Q&A complete for PROJ-123. Moving to next task...
 Spawn one background `pm` subagent per task simultaneously. Each receives ONLY:
 - `CLAUDE.md`
 - `README.md` (if it contains product context)
-- The Linear task title and description
+- The Plane task title and description
 - `docs/specs/<slug>/_questions.md` — the questions
 - `docs/specs/<slug>/_answers.md` — the user's answers
 - **Instruction:** Write the spec to `docs/specs/<slug>/v1.md` using the provided answers. Do NOT ask questions — they have been answered. If any remaining ambiguity exists, note it in the Open Questions section of the spec.
@@ -175,7 +175,7 @@ Review each spec. For each, respond with:
 ```
 
 Process the user's response:
-- **Approved specs:** Freeze immediately — PM sets status to "Ready for Architect", update Linear (summary fields + status → "Spec Ready"), create Linear task if none existed
+- **Approved specs:** Freeze immediately — PM sets status to "Ready for Architect", update Plane (summary fields + status → "Spec Ready"), create Plane task if none existed
 - **Specs with feedback:** Write feedback to `docs/specs/<slug>/_feedback.md`
 
 #### Phase 5: Parallel revision (background, conditional)

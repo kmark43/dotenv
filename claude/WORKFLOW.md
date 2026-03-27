@@ -83,11 +83,11 @@ Or add to your shell profile (`~/.zshrc`, `~/.bashrc`) to make it permanent.
 
 Note: effort is a session-wide setting inherited by all subagents. Per-agent effort levels are not currently supported by Claude Code.
 
-### 4. Connect Linear MCP (optional but recommended)
+### 4. Connect Plane MCP (optional but recommended)
 
-See the official Linear MCP docs to connect your workspace. Once connected, all commands support task lookup by name, ID, or backlog position, and automatically sync status and descriptions.
+See the official Plane MCP docs to connect your workspace. Once connected, all commands support task lookup by name, ID, or backlog position, and automatically sync status and descriptions.
 
-**Linear workflow statuses used:**
+**Plane workflow statuses used:**
 - **Backlog** → default
 - **Spec Ready** → after PM spec is frozen
 - **Design Ready** → after architecture design is approved
@@ -103,7 +103,7 @@ See the official Linear MCP docs to connect your workspace. Once connected, all 
 
 `/spec` handles single features and bulk backlog batches in one command. Each task runs in a fully isolated subagent — no context bleeds between tasks.
 
-**Single feature (name search, creates or finds Linear task):**
+**Single feature (name search, creates or finds Plane task):**
 ```
 /spec "user authentication with email and social login"
 /spec PROJ-123
@@ -122,11 +122,11 @@ See the official Linear MCP docs to connect your workspace. Once connected, all 
 
 **Single-task flow:**
 1. Claude resolves the task (searches prioritized backlog first, then full backlog), confirms the match
-2. If no Linear task exists: confirmed, then offered to create one after spec is frozen
+2. If no Plane task exists: confirmed, then offered to create one after spec is frozen
 3. PM agent (fresh subagent) writes a draft spec to `docs/specs/<feature>/v1.md`
 4. PM surfaces open questions — you answer, PM updates, repeat until resolved
 5. You approve: "lgtm", "freeze it", "approved", etc.
-6. Linear task updated: Problem + Goals + AC + spec path copied in, status → "Spec Ready"
+6. Plane task updated: Problem + Goals + AC + spec path copied in, status → "Spec Ready"
 7. Prompted: **"Run `/design` for this spec now? (y/n)"**
    - Yes → fresh `/design` subagent starts (no PM history passed)
    - No → done
@@ -140,7 +140,7 @@ When multiple tasks are given, specs are processed in parallel phases to minimiz
 3. **Parallel spec writing** — all PM agents launch in background simultaneously, each writes its spec using your answers
 4. **Consolidated review** — all drafts presented at once for review; approve or give feedback per spec
 5. **Parallel revision** — specs with feedback get revised in parallel; loop until all approved
-6. **Finalization** — all specs frozen, Linear updated, offered to run `/design`
+6. **Finalization** — all specs frozen, Plane updated, offered to run `/design`
 
 The Q&A stays interactive and per-task for quality, while question generation and writing happen in parallel across all tasks.
 
@@ -166,7 +166,7 @@ The Q&A stays interactive and per-task for quality, while question generation an
 ```
 
 **Single-task flow:**
-1. Claude resolves the spec path (from argument, Linear task, or name search), confirms
+1. Claude resolves the spec path (from argument, Plane task, or name search), confirms
 2. Architect (fresh subagent) reads `CLAUDE.md` + PM spec + existing related designs
 3. Architect verifies spec status is "Ready for Architect" — stops if not
 4. **Question phase (iterative):**
@@ -176,7 +176,7 @@ The Q&A stays interactive and per-task for quality, while question generation an
    - Only then does it write
 5. Architect writes design to `docs/designs/<feature>/vN.md`, presents for review
 6. You give feedback → architect makes targeted edits → repeat until approved
-7. Linear updated: design path added, status → "Design Ready"
+7. Plane updated: design path added, status → "Design Ready"
 8. Prompted: **"Start implementation now? (y/n)"**
    - Yes → worktree auto-created, fresh `/feature` subagent starts (no design history passed)
    - No → done
@@ -190,7 +190,7 @@ When multiple tasks are given, designs are processed in parallel phases:
 3. **Parallel design writing** — all architect agents launch in background simultaneously, each writes its design using your answers
 4. **Consolidated review** — all designs presented at once for review; approve or give feedback per design
 5. **Parallel revision** — designs with feedback get revised in parallel (uses `architect-revise` for surface-level feedback, full `architect` for structural changes); loop until all approved
-6. **Finalization** — all designs approved, Linear updated, offered to run `/feature`
+6. **Finalization** — all designs approved, Plane updated, offered to run `/feature`
 
 **Parallel tip:** approve a design and kick off implementation while working on the next design by sending both in the same message:
 ```
@@ -226,7 +226,7 @@ When multiple features are given (or a fuzzy search finds multiple matches), all
 4. **Dev Fix agent** (fresh subagent, only if QA fails) — fixes against QA report only
 5. **Final QA** (fresh subagent, only if dev fix ran) — verifies fixes didn't introduce new issues, loops back to dev fix if needed (max 3 cycles)
 6. Commit made on the feature branch with design/spec/QA references in the message
-7. Linear status → "In Review"
+7. Plane status → "In Review"
 8. Summary output with diff review instructions and `/pr` command
 
 **To review the diff after pipeline completes:**
@@ -263,13 +263,13 @@ For bugs and small contained tasks that don't need a PM spec or architecture des
 ```
 
 **What happens:**
-1. Claude finds the task in Linear, confirms
+1. Claude finds the task in Plane, confirms
 2. Sanity check — evaluates if the task is appropriate for the lightweight path:
    - Has a clear testable outcome?
    - Scope contained to a specific behavior?
    - No data model changes or new API surfaces likely?
    - If any fail → warning shown, you choose to proceed or escalate to `/spec`
-3. Dev agent implements using only the Linear task description
+3. Dev agent implements using only the Plane task description
 4. If dev discovers the fix requires structural changes — stops and escalates:
    ```
    ## Escalation Required
@@ -278,7 +278,7 @@ For bugs and small contained tasks that don't need a PM spec or architecture des
    ```
 5. QA tests stated expected behavior and regressions
 6. Dev fix loop if QA finds issues
-7. Linear status → "In Review"
+7. Plane status → "In Review"
 
 **Rule of thumb:** if you can write a one-sentence expected outcome, use `/fix`. If you're debating what the right behavior should be, use `/spec` first.
 
@@ -316,7 +316,7 @@ List all active feature worktrees and their pipeline status:
 /worktrees
 ```
 
-Shows a table with branch, Linear task, and status (In Progress / QA Passed / Awaiting PR / PR Open / Merged).
+Shows a table with branch, Plane task, and status (In Progress / QA Passed / Awaiting PR / PR Open / Merged).
 
 Remove merged worktrees:
 ```
@@ -345,7 +345,7 @@ Bulk — create PRs for all features that have passed QA and have no open PR:
 /pr all
 ```
 
-Each PR is populated with: feature summary, files changed, QA verdict, and links to the spec, design, and QA report. Linear task status updated to "In Review".
+Each PR is populated with: feature summary, files changed, QA verdict, and links to the spec, design, and QA report. Plane task status updated to "In Review".
 
 ---
 
@@ -394,7 +394,7 @@ Each agent only receives what it needs. No history is passed between stages or b
 
 | Agent | Gets | Does NOT get |
 |-------|------|-------------|
-| PM | CLAUDE.md, Linear task, existing specs | Code, architecture, chat history |
+| PM | CLAUDE.md, Plane task, existing specs | Code, architecture, chat history |
 | Architect | CLAUDE.md, PM spec, existing designs | Code, PM chat history |
 | Dev | CLAUDE.md, PM spec (AC only), design | PM/architect chat history, other features |
 | QA | CLAUDE.md, PM spec (AC/FR only), impl summary | Architecture design, dev chat history |
@@ -426,7 +426,7 @@ Continuation prompts (spec → design, design → implementation) always spawn a
 
 1. `cp ~/.claude/CLAUDE.md.template ./CLAUDE.md` — fill in tech stack, conventions, protected paths
 2. `mkdir -p docs/specs docs/designs docs/qa`
-3. Set up Linear workflow statuses: Backlog, Spec Ready, Design Ready, In Progress, In Review, Done
+3. Set up Plane workflow statuses: Backlog, Spec Ready, Design Ready, In Progress, In Review, Done
 4. Run `/spec` or `/spec 3` to start
 
 No other per-project configuration needed. All agents and commands are global.
@@ -441,7 +441,7 @@ Tell it: "Stop — you haven't asked your clarifying questions yet." The agent p
 **Dev guessed instead of flagging ambiguity**
 Run `/qa-review` — QA will catch it. Then file a bug against the implementation with `/dev-fix`.
 
-**Linear task not found by name**
+**Plane task not found by name**
 Try a more specific name, or use the task ID directly (`PROJ-123`).
 
 **Parallel tasks conflicting on the same files**
@@ -451,7 +451,7 @@ Use git worktrees (see above). Each worktree is an isolated working directory on
 Edit the spec status back to "Open Questions" and continue the spec conversation.
 
 **`/fix` escalated but the task really is small**
-Override by running `/dev-task` directly with more specific context, or add more detail to the Linear task description and retry.
+Override by running `/dev-task` directly with more specific context, or add more detail to the Plane task description and retry.
 
 **Not sure whether to use `/fix` or `/spec`**
 Ask: can you write a one-sentence expected outcome? If yes, try `/fix`. If you're debating what the right behavior should be, use `/spec`.

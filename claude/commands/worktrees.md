@@ -16,8 +16,8 @@ git worktree list
 
 For each worktree that is NOT the main working tree:
 1. Read the branch name (e.g., `feature/PROJ-123-user-auth`)
-2. Extract the Linear task ID from the branch name if present
-3. Fetch the Linear task title and current status (if Linear MCP available)
+2. Extract the Plane task ID from the branch name if present
+3. Fetch the Plane task title and current status (if Plane MCP available)
 4. Determine local status by checking:
    - Does `docs/qa/<slug>-*-review.md` exist? → QA has run
    - What is the QA report verdict? → PASS / FAIL / PASS WITH CONCERNS
@@ -28,7 +28,7 @@ Display as a table:
 ```
 ## Active Feature Worktrees
 
-| Worktree | Branch | Linear | Status |
+| Worktree | Branch | Plane | Status |
 |----------|--------|--------|--------|
 | .worktrees/user-auth | feature/PROJ-123-user-auth | PROJ-123: User Auth | QA Passed — awaiting PR |
 | .worktrees/notifications | feature/PROJ-456-notifications | PROJ-456: Push Notifs | In Progress |
@@ -63,7 +63,7 @@ If argument is `clean`:
 
 If a branch name or task ID is given, show:
 - Worktree path
-- Branch name and Linear task
+- Branch name and Plane task
 - Last commit message and hash
 - QA report verdict (if exists)
 - PR status and link (if exists)

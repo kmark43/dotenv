@@ -48,7 +48,7 @@ symlink() {
 if [ "$MINIMAL" = false ]; then
   header "Installing system packages"
 
-  PACKAGES=(git curl jq tmux vim neovim zsh python3 python3-venv)
+  PACKAGES=(git curl jq tmux vim neovim zsh python3 python3-venv htop wget unzip make)
   FZF_PKG="fzf"
 
   # Detect Java package name (apt vs brew)
@@ -71,6 +71,9 @@ if [ "$MINIMAL" = false ]; then
   done
   command -v rg &>/dev/null || missing+=("ripgrep")
   command -v fzf &>/dev/null || missing+=("$FZF_PKG")
+  if command -v apt-get &>/dev/null; then
+    dpkg -s build-essential &>/dev/null 2>&1 || missing+=("build-essential")
+  fi
 
   if [ ${#missing[@]} -eq 0 ]; then
     skip "All packages installed"
@@ -162,6 +165,80 @@ if [ "$MINIMAL" = false ]; then
   mkdir -p "$HOME/.local/share/pnpm"
 
   # ---------------------------------------------------------------------------
+  # Docker
+  # ---------------------------------------------------------------------------
+
+  header "Installing Docker"
+
+  if command -v docker &>/dev/null; then
+    skip "Docker"
+  else
+    if command -v apt-get &>/dev/null; then
+      # Add Docker's official GPG key and repo
+      sudo apt-get install -y -qq ca-certificates gnupg
+      sudo install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg --yes
+      sudo chmod a+r /etc/apt/keyrings/docker.gpg
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(. /etc/os-release && echo "$ID") \
+        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+        sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+      sudo apt-get update -qq
+      sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    elif command -v brew &>/dev/null; then
+      brew install --cask docker
+    fi
+    # Add current user to docker group (avoids needing sudo for docker commands)
+    if getent group docker &>/dev/null; then
+      sudo usermod -aG docker "$USER" 2>/dev/null || true
+    fi
+    ok "Docker"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # GitHub CLI
+  # ---------------------------------------------------------------------------
+
+  header "Installing GitHub CLI"
+
+  if command -v gh &>/dev/null; then
+    skip "GitHub CLI"
+  else
+    if command -v apt-get &>/dev/null; then
+      curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+      sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli-stable.list > /dev/null
+      sudo apt-get update -qq
+      sudo apt-get install -y -qq gh
+    elif command -v brew &>/dev/null; then
+      brew install gh
+    fi
+    ok "GitHub CLI"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # SSH key (ed25519) for GitHub
+  # ---------------------------------------------------------------------------
+
+  header "SSH key setup"
+
+  SSH_KEY="$HOME/.ssh/id_ed25519"
+  if [ -f "$SSH_KEY" ]; then
+    skip "SSH key ($SSH_KEY)"
+  else
+    info "Generating ed25519 SSH key..."
+    mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+    ssh-keygen -t ed25519 -C "kyler.markland@yahoo.com" -f "$SSH_KEY" -N ""
+    ok "SSH key generated"
+    echo ""
+    echo "  Add this public key to GitHub (https://github.com/settings/ssh/new):"
+    echo ""
+    cat "${SSH_KEY}.pub"
+    echo ""
+    read -rp "  Press Enter once you've added the key to GitHub..."
+  fi
+
+  # ---------------------------------------------------------------------------
   # 5. devcontainer CLI
   # ---------------------------------------------------------------------------
 
@@ -184,6 +261,7 @@ header "Symlinking dotfiles"
 symlink "$DOTFILES_DIR/git/.gitconfig"  "$HOME/.gitconfig"
 symlink "$DOTFILES_DIR/vim/.vimrc"      "$HOME/.vimrc"
 symlink "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
+symlink "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
 
 # ---------------------------------------------------------------------------
 # 7. Zsh aliases
@@ -244,6 +322,15 @@ if [ "$changed" = true ]; then
   ok "Agents & commands installed to ~/.claude/"
 else
   skip "Claude Code toolkit"
+fi
+
+# ---------------------------------------------------------------------------
+# Sync GitHub repos
+# ---------------------------------------------------------------------------
+
+if [ "$MINIMAL" = false ] && command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+  header "Syncing GitHub repos"
+  "$DOTFILES_DIR/scripts/github-sync.sh"
 fi
 
 # ---------------------------------------------------------------------------

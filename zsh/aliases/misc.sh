@@ -6,9 +6,9 @@ alias gucommit="git add -A && git commit --amend --no-edit"
 alias gl="git log --oneline --graph --decorate -20"
 
 # commit-push
-function compush () {
-    git add -A && git commit -m "$1" && git push -u origin HEAD
-}
+# function compush () {
+#     git add -A && git commit -m "$1" && git push -u origin HEAD
+# }
 
 # git reset to main
 # function grmain () {

@@ -32,6 +32,11 @@ symlink() {
     return
   fi
   if [ -e "$dst" ]; then
+    # Skip bind-mounted files (can't be moved/replaced)
+    if findmnt --target "$dst" &>/dev/null 2>&1; then
+      skip "$dst (bind mount)"
+      return
+    fi
     local backup="${dst}.bak.$(date +%s)"
     mv "$dst" "$backup"
     info "Backed up $dst -> $backup"
@@ -188,11 +193,13 @@ if [ "$MINIMAL" = false ]; then
     elif command -v brew &>/dev/null; then
       brew install --cask docker
     fi
-    # Add current user to docker group (avoids needing sudo for docker commands)
-    if getent group docker &>/dev/null; then
-      sudo usermod -aG docker "$USER" 2>/dev/null || true
-    fi
     ok "Docker"
+  fi
+
+  # Add current user to docker group (avoids needing sudo for docker commands)
+  if getent group docker &>/dev/null && ! id -nG "$USER" | grep -qw docker; then
+    sudo usermod -aG docker "$USER" 2>/dev/null || true
+    ok "Added $USER to docker group (log out/in to take effect)"
   fi
 
   # ---------------------------------------------------------------------------
@@ -259,6 +266,7 @@ fi
 header "Symlinking dotfiles"
 
 symlink "$DOTFILES_DIR/git/.gitconfig"  "$HOME/.gitconfig"
+touch "$HOME/.gitconfig.local"  # devcontainer bind-mount requires this to exist
 symlink "$DOTFILES_DIR/vim/.vimrc"      "$HOME/.vimrc"
 symlink "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 symlink "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
@@ -307,16 +315,16 @@ mkdir -p "$HOME/.claude/agents" "$HOME/.claude/commands"
 changed=false
 for f in "$DOTFILES_DIR/claude/agents/"*.md; do
   [ -f "$f" ] || continue
-  cp "$f" "$HOME/.claude/agents/"
+  symlink "$f" "$HOME/.claude/agents/$(basename "$f")"
   changed=true
 done
 for f in "$DOTFILES_DIR/claude/commands/"*.md; do
   [ -f "$f" ] || continue
-  cp "$f" "$HOME/.claude/commands/"
+  symlink "$f" "$HOME/.claude/commands/$(basename "$f")"
   changed=true
 done
-cp "$DOTFILES_DIR/claude/CLAUDE.md.template" "$HOME/.claude/"
-cp "$DOTFILES_DIR/claude/WORKFLOW.md" "$HOME/.claude/"
+symlink "$DOTFILES_DIR/claude/CLAUDE.md.template" "$HOME/.claude/CLAUDE.md.template"
+symlink "$DOTFILES_DIR/claude/WORKFLOW.md" "$HOME/.claude/WORKFLOW.md"
 
 if [ "$changed" = true ]; then
   ok "Agents & commands installed to ~/.claude/"

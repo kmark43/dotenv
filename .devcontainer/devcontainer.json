@@ -9,7 +9,11 @@
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "mounts": [
     "source=${localEnv:HOME}/.gitconfig.local,target=/home/vscode/.gitconfig.local,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.local/share/pnpm,target=/home/vscode/.local/share/pnpm,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.local/share/pnpm,target=/home/vscode/.local/share/pnpm,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/projects/dotenv,target=/home/vscode/.dotenv,type=bind,readonly",
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.host-claude,type=bind,readonly",
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.host-ssh,type=bind,readonly"
   ],
+  "initializeCommand": "bash .devcontainer/init-host.sh",
   "remoteUser": "vscode"
 }

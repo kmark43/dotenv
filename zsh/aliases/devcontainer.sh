@@ -3,6 +3,7 @@
 # Requires: devcontainer CLI installed (bootstrap.sh handles this)
 
 # Open a dev container in the current directory (mounts cwd, starts container, opens shell)
+# Usage: dc [--recreate]
 dc() {
   local dir
   dir="$(pwd)"
@@ -10,6 +11,16 @@ dc() {
     echo "No .devcontainer or .devcontainer.json in $dir" >&2
     echo "Copy .devcontainer from ~/projects/dotenv or add one to this project." >&2
     return 1
+  fi
+  if [[ "$1" == "--recreate" ]]; then
+    local container_id
+    container_id=$(docker ps -aq --filter "label=devcontainer.local_folder=$dir")
+    if [[ -n "$container_id" ]]; then
+      echo "Removing devcontainer for $dir ($container_id)..."
+      docker rm -f "$container_id"
+    else
+      echo "No existing devcontainer found for $dir, creating fresh."
+    fi
   fi
   devcontainer up --workspace-folder "$dir" && devcontainer exec --workspace-folder "$dir" "${SHELL:-/bin/bash}"
 }

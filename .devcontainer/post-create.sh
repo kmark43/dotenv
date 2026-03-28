@@ -5,9 +5,22 @@
 # This script copies what's needed into the container with proper ownership.
 set -e
 
-# Ensure ~/.claude exists and is owned by the container user
+echo "Starting post-create script..."
+echo "Shell: $0"
+echo "BASH_VERSION: ${BASH_VERSION:-not set}"
+
+# Ensure we're running in bash (not sh) for compatibility
+if [ -z "$BASH_VERSION" ]; then
+  echo "Not running in bash, switching to bash..."
+  exec bash "$0" "$@"
+fi
+
+echo "Confirmed running in bash"
+
+# Ensure necessary directories exist and are owned by the container user
+sudo mkdir -p "$HOME/.local/share"
 sudo mkdir -p "$HOME/.claude"
-sudo chown "$(id -u):$(id -g)" "$HOME/.claude"
+sudo chown -R "$(id -u):$(id -g)" "$HOME/.local" "$HOME/.claude"
 
 # The dotenv repo is bind-mounted by the host at a known location.
 # For the dotenv project itself it's the workspace; for other projects
@@ -88,22 +101,58 @@ if [ -f "$HOST_CLAUDE/.env" ]; then
 fi
 
 # --- Claude Code CLI ---
-if ! command -v claude &>/dev/null; then
-  curl -fsSL https://claude.ai/install.sh | sh
+echo "Checking for Claude CLI..."
+if ! command -v claude >/dev/null 2>&1; then
+  echo "Claude CLI not found, installing..."
+
+  # Create additional directories that might be needed
+  sudo mkdir -p "$HOME/.local/share/claude" "$HOME/.local/bin"
+  sudo chown -R "$(id -u):$(id -g)" "$HOME/.local"
+
+  # Try native installer first, fall back to npm if it fails
+  echo "Attempting Claude CLI installation via curl..."
+  if ! (curl -fsSL https://claude.ai/install.sh | bash); then
+    echo "Native installer failed, trying npm installation..."
+    if command -v npm >/dev/null 2>&1; then
+      npm install -g @anthropic-ai/claude-code
+    else
+      echo "Warning: Claude CLI installation failed - both native and npm methods unavailable"
+    fi
+  fi
+
+  # Ensure claude is in PATH for current session
+  export PATH="$HOME/.local/bin:$PATH"
+  # Add to shell profile for future sessions
+  if [ -n "$ZSH_VERSION" ]; then
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
+  else
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+  fi
+else
+  echo "Claude CLI already available"
 fi
 
 # --- MCP servers ---
 # uv (Python package runner, needed for stdio-based MCP servers)
-if ! command -v uv &>/dev/null; then
+if ! command -v uv >/dev/null 2>&1; then
+  # Ensure directory exists before uv installation
+  sudo mkdir -p "$HOME/.local/bin"
+  sudo chown -R "$(id -u):$(id -g)" "$HOME/.local"
+
   curl -LsSf https://astral.sh/uv/install.sh | sh
   export PATH="$HOME/.local/bin:$PATH"
+  # Reload the shell environment to pick up uv
+  source "$HOME/.local/bin/env" 2>/dev/null || true
 fi
 # Plane (project management) — runs via uvx at launch, just verify uv works
-command -v uvx &>/dev/null && uvx --help &>/dev/null
+if command -v uvx >/dev/null 2>&1; then
+  uvx --help >/dev/null 2>&1 || true
+fi
 
 # --- Claude Code agents, commands, docs ---
-mkdir -p "$HOME/.claude/agents" "$HOME/.claude/commands"
-mkdir -p "$HOME/.claude/cache" "$HOME/.claude/sessions" "$HOME/.claude/projects"
+sudo mkdir -p "$HOME/.claude/agents" "$HOME/.claude/commands"
+sudo mkdir -p "$HOME/.claude/cache" "$HOME/.claude/sessions" "$HOME/.claude/projects"
+sudo chown -R "$(id -u):$(id -g)" "$HOME/.claude"
 cp "$DOTENV/claude/agents/"*.md "$HOME/.claude/agents/" 2>/dev/null || true
 cp "$DOTENV/claude/commands/"*.md "$HOME/.claude/commands/" 2>/dev/null || true
 cp "$DOTENV/claude/CLAUDE.md.template" "$HOME/.claude/" 2>/dev/null || true
@@ -111,5 +160,20 @@ cp "$DOTENV/claude/WORKFLOW.md" "$HOME/.claude/" 2>/dev/null || true
 
 # Skip interactive onboarding prompt
 echo '{"hasCompletedOnboarding": true}' > "$HOME/.claude.json"
+
+# Verify installations
+echo "Verifying installations..."
+if command -v claude >/dev/null 2>&1; then
+  echo "✓ Claude CLI installed successfully"
+  claude --version || echo "Note: claude --version failed (may need authentication)"
+else
+  echo "✗ Claude CLI installation failed"
+fi
+
+if command -v uv >/dev/null 2>&1; then
+  echo "✓ uv installed successfully"
+else
+  echo "✗ uv installation failed"
+fi
 
 echo "Post-create complete."

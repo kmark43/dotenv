@@ -76,6 +76,14 @@ if [ -d "$HOME/.host-ssh" ]; then
   chmod 644 "$HOME/.ssh/known_hosts" 2>/dev/null || true
 fi
 
+# --- GitHub CLI credentials (copied so container user owns them) ---
+if [ -d "$HOME/.host-gh" ]; then
+  mkdir -p "$HOME/.config/gh"
+  cp "$HOME/.host-gh/"* "$HOME/.config/gh/" 2>/dev/null || true
+  chmod 600 "$HOME/.config/gh/hosts.yml" 2>/dev/null || true
+  echo "✓ GitHub CLI credentials copied from host"
+fi
+
 # --- Claude credentials & settings (copied so container user owns them) ---
 HOST_CLAUDE="$HOME/.host-claude"
 if [ -f "$HOST_CLAUDE/.credentials.json" ]; then
@@ -98,6 +106,23 @@ fi
 if [ -f "$HOST_CLAUDE/.env" ]; then
   cp "$HOST_CLAUDE/.env" "$HOME/.claude/.env"
   chmod 600 "$HOME/.claude/.env"
+fi
+
+# --- Claude Code main config (.claude.json) with path transformation ---
+if [ -f "$HOME/.host-claude.json" ]; then
+  # Get the container home directory
+  CONTAINER_HOME=$(cd ~ && pwd)
+
+  # Copy the host config and transform paths
+  cp "$HOME/.host-claude.json" "$HOME/.claude.json"
+
+  # Replace all instances of /home/kyler with container home
+  sed -i "s|/home/kyler|${CONTAINER_HOME}|g" "$HOME/.claude.json"
+
+  # Set proper permissions
+  chmod 600 "$HOME/.claude.json"
+
+  echo "✓ Copied and transformed .claude.json with container paths"
 fi
 
 # --- Claude Code CLI ---
@@ -158,8 +183,10 @@ cp "$DOTENV/claude/commands/"*.md "$HOME/.claude/commands/" 2>/dev/null || true
 cp "$DOTENV/claude/CLAUDE.md.template" "$HOME/.claude/" 2>/dev/null || true
 cp "$DOTENV/claude/WORKFLOW.md" "$HOME/.claude/" 2>/dev/null || true
 
-# Skip interactive onboarding prompt
-echo '{"hasCompletedOnboarding": true}' > "$HOME/.claude.json"
+# Skip interactive onboarding prompt (only if no host config was copied)
+if [ ! -f "$HOME/.claude.json" ]; then
+  echo '{"hasCompletedOnboarding": true}' > "$HOME/.claude.json"
+fi
 
 # Verify installations
 echo "Verifying installations..."

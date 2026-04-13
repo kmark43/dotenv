@@ -2,14 +2,34 @@
 # Sourced automatically via dotenv bootstrap (symlinked to ~/.zsh/aliases/)
 # Requires: devcontainer CLI installed (bootstrap.sh handles this)
 
+# Calculate and export DOTENV_PATH for devcontainer mounts
+_set_dotenv_path() {
+  # Find dotenv directory by looking for this script's location
+  local script_dir
+  script_dir="$(dirname "${(%):-%x}")"  # zsh-specific way to get script directory
+  local dotenv_dir
+  dotenv_dir="$(cd "$script_dir/../.." 2>/dev/null && pwd)" || return 1
+
+  # Calculate relative path from HOME
+  local dotenv_relative="${dotenv_dir#$HOME/}"
+  if [[ "$dotenv_relative" == "$dotenv_dir" ]]; then
+    # dotenv is not under $HOME, use absolute path
+    export DOTENV_PATH="$dotenv_dir"
+  else
+    # dotenv is under $HOME, use relative path
+    export DOTENV_PATH="$dotenv_relative"
+  fi
+}
+
 # Open a dev container in the current directory (mounts cwd, starts container, opens shell)
 # Usage: dc [--recreate]
 dc() {
+  _set_dotenv_path || { echo "Failed to locate dotenv directory" >&2; return 1; }
   local dir
   dir="$(pwd)"
   if [[ ! -d "$dir/.devcontainer" && ! -f "$dir/.devcontainer.json" ]]; then
     echo "No .devcontainer or .devcontainer.json in $dir" >&2
-    echo "Copy .devcontainer from ~/projects/dotenv or add one to this project." >&2
+    echo "Copy .devcontainer from your dotenv repo or add one to this project." >&2
     return 1
   fi
   if [[ "$1" == "--recreate" ]]; then
@@ -27,11 +47,13 @@ dc() {
 
 # Only start the container (no shell)
 dc-up() {
+  _set_dotenv_path || { echo "Failed to locate dotenv directory" >&2; return 1; }
   devcontainer up --workspace-folder "${1:-.}"
 }
 
 # Run a command in the dev container for the current directory
 dc-exec() {
+  _set_dotenv_path || { echo "Failed to locate dotenv directory" >&2; return 1; }
   devcontainer exec --workspace-folder "$(pwd)" "$@"
 }
 

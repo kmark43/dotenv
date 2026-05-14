@@ -349,10 +349,10 @@ fi
 # Sync GitHub repos
 # ---------------------------------------------------------------------------
 
-if [ "$MINIMAL" = false ] && command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
-  header "Syncing GitHub repos"
-  "$DOTFILES_DIR/scripts/github-sync.sh"
-fi
+# if [ "$MINIMAL" = false ] && command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+#   header "Syncing GitHub repos"
+#   "$DOTFILES_DIR/scripts/github-sync.sh"
+# fi
 
 # ---------------------------------------------------------------------------
 # Done

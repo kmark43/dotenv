@@ -6,6 +6,8 @@ DOTENV_DIR="$HOME/projects/dotenv"
 # Add scripts to PATH
 export PATH="$DOTENV_DIR/scripts:$PATH"
 
+export EDITOR="vim"
+
 # SSH agent — use systemd-managed socket, load key if not already loaded
 export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-agent.sock"
 ssh-add -l > /dev/null 2>&1 || ssh-add > /dev/null 2>&1

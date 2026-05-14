@@ -4,6 +4,7 @@ alias gs="git status -sb"
 alias gundo="git reset --soft HEAD~1"
 alias gucommit="git add -A && git commit --amend --no-edit"
 alias gl="git log --oneline --graph --decorate -20"
+alias mux="tmuxinator"
 
 # commit-push
 # function compush () {

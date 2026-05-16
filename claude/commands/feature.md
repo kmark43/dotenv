@@ -3,11 +3,8 @@ Run the full implementation pipeline for one or more features: $ARGUMENTS
 Arguments are flexible — provide as much or as little as you want:
 - A design path: `/feature docs/designs/user-auth/v1.md`
 - A spec path: `/feature docs/specs/user-auth/v1.md`
-- A Plane task ID: `/feature PROJ-123`
 - A feature name or description: `/feature "user authentication"`
 - Multiple features (pipe-separated): `/feature "user auth" | "push notifications"`
-- Multiple task IDs: `/feature PROJ-123,PROJ-456` or `/feature PROJ-123 | PROJ-456`
-- A number: `/feature 3` — top N "Design Ready" tasks from Plane
 - Nothing: `/feature` — will ask what to work on
 
 ## Instructions
@@ -23,29 +20,20 @@ Each stage uses a fresh subagent. No history passes between stages.
 
 ### Resolve the feature list
 
-**If given a number N:**
-- Search Plane for top N tasks with status "Design Ready" (by backlog priority order)
-- Display the list and wait for confirmation
-
-**If given task IDs (comma or `|` separated):**
-- Fetch each from Plane, read design path from `**Design:**` field
-- Display confirmed list and wait
-
 **If given multiple names/paths (`|` separated):**
-- Resolve each independently (fuzzy match designs → specs → Plane)
+- Resolve each independently (fuzzy match designs → specs locally)
 - Display confirmed list and wait
 
 **If given a single name/description:**
 - Fuzzy match against:
   1. `docs/designs/` directory — find designs whose filename or title matches
   2. `docs/specs/` directory — find specs whose filename or title matches
-  3. Plane backlog — search by name/description
 - If **one match**: confirm and proceed as single feature
 - If **multiple matches** (2-3): present them and ask:
   ```
   Found multiple matching features:
-  1. docs/designs/integration-tests/v1.md — Integration Tests (PROJ-123)
-  2. docs/designs/jest-unit-testing/v1.md — Jest Unit Testing (PROJ-456)
+  1. docs/designs/integration-tests/v1.md — Integration Tests
+  2. docs/designs/jest-unit-testing/v1.md — Jest Unit Testing
 
   Run one (enter number), or run all in parallel? (all/1/2)
   ```
@@ -173,17 +161,16 @@ Then proceed with normal worktree creation and the full pipeline (Single-feature
 When running a single feature, prompt for base branch before creating the worktree:
 
 ```
-Base branch: main (default) — change? (type branch name, task ID, or press enter to use main)
+Base branch: main (default) — change? (type branch name or press enter to use main)
 ```
 
 If the user types something, fuzzy match against:
 - Active feature branches from `git branch --list "feature/*"`
 - Active worktrees from `git worktree list`
-- If input looks like a task ID (e.g. "123" or "PROJ-123"), match to a branch containing that ID
 
 Show the match and confirm:
 ```
-Base branch: feature/PROJ-123-user-auth — correct? (y/n)
+Base branch: feature/user-auth — correct? (y/n)
 ```
 
 If no match found, ask the user to clarify or enter the full branch name.
@@ -191,8 +178,7 @@ If no match found, ask the user to clarify or enter the full branch name.
 Create the worktree:
 ```bash
 # Derive slug from design file path
-# Branch: feature/PROJ-456-<slug> (or feature/<slug> if no task ID)
-git worktree add .worktrees/<slug> --base <resolved-base-branch> -b feature/PROJ-456-<slug>
+git worktree add .worktrees/<slug> --base <resolved-base-branch> -b feature/<slug>
 
 # Fix absolute paths → relative paths (required for devcontainer/mount compatibility)
 echo "gitdir: ../../.git/worktrees/<slug>" > .worktrees/<slug>/.git
@@ -202,7 +188,7 @@ echo "../../.worktrees/<slug>/.git" > .git/worktrees/<slug>/gitdir
 If base branch is not main, note it in the output:
 ```
 Worktree created: .worktrees/<slug>
-Branch: feature/PROJ-456-<slug> (based on feature/PROJ-123-user-auth)
+Branch: feature/<slug> (based on feature/user-auth)
 Note: if the base branch changes, rebase this branch on top of it before merging.
 ```
 
@@ -360,8 +346,6 @@ Implements: docs/designs/<slug>/vN.md
 Spec: docs/specs/<slug>/vN.md
 QA: docs/qa/<slug>-vN-review.md"
 ```
-
-Update Plane task status to "In Review".
 
 ---
 

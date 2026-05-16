@@ -1,0 +1,2 @@
+ - Prefer dependency injection over globals
+ - Prefer self-documenting names over comments

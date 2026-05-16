@@ -1,44 +1,21 @@
 Write PM spec(s) for: $ARGUMENTS
 
 Arguments can be:
-- A number: `/spec 3` — top N prioritized tasks from Plane backlog
-- Task IDs: `/spec PROJ-123,PROJ-456` or `/spec PROJ-123 | PROJ-456` — specific tasks (comma or `|` separated)
-- Multiple descriptions: `/spec "user auth" | "push notifications" | "dark mode"` — each searched/created independently
-- A single task name/description: `/spec "user authentication"` — search Plane, confirm match
-- A feature description with no Plane task: `/spec "add push notifications"` — create new Plane task
+- Multiple descriptions: `/spec "user auth" | "push notifications" | "dark mode"` — each processed independently
+- A single feature name/description: `/spec "user authentication"`
 
 ## Instructions
 
-### Step 1: Resolve the task list
-
-**If given a number N:**
-- Search Plane for the top N prioritized backlog tasks
-- Display the list and wait for confirmation before proceeding:
-  ```
-  Top N backlog tasks:
-  1. PROJ-123: [title] — [one-line description]
-  2. PROJ-456: [title] — [one-line description]
-  Proceed in this order? (confirm or reorder/skip)
-  ```
-
-**If given task IDs (comma or `|` separated):**
-- Split on `,` or ` | ` to get individual IDs
-- Fetch each from Plane, display the list, wait for confirmation
+### Step 1: Resolve the feature list
 
 **If given multiple descriptions (`|` separated):**
-- Split on ` | ` to get individual descriptions
-- Treat each as a separate task — resolve, confirm, and process each in order (same flow as bulk task IDs)
+- Split on ` | ` to get individual feature names
+- Display the list and wait for confirmation before proceeding
 
 **If given a single name/description:**
-- Search prioritized backlog first, then full backlog
-- Present top 1-3 matches:
-  ```
-  Found matching tasks:
-  1. PROJ-123: [title] ← best match
-  2. PROJ-456: [title]
-  Which did you mean? (or confirm #1)
-  ```
-- If no match found: confirm with user that no Plane task exists, then offer to create one after spec is frozen
+- Check `docs/specs/` for any existing spec whose slug or title closely matches
+- If found, show it and confirm: amend (new version) or start fresh?
+- If not found, proceed to write a new spec
 
 ### Step 2: Determine execution mode
 
@@ -52,13 +29,13 @@ Arguments can be:
 Run in a fresh subagent with clean context.
 
 **3a. Check for existing spec**
-- Read the Plane task description for a `**Spec:**` field
+- Check `docs/specs/<feature-slug>/` for an existing spec
 - If a spec file exists, show it and ask: amend (new version) or skip?
 
 **3b. Activate the `pm` agent with ONLY:**
 - `CLAUDE.md`
 - `README.md` (if it contains product context)
-- The Plane task title and description
+- The feature name/description provided by the user
 - Any existing related specs from `docs/specs/`
 
 Do NOT pass: code, architecture docs, other tasks' specs, prior conversation history
@@ -72,26 +49,23 @@ Do NOT pass: code, architecture docs, other tasks' specs, prior conversation his
 
 After the PM finishes writing the spec (no open questions remaining), output:
 ```
-## Spec Draft Complete — PROJ-123: [title]
+## Spec Draft Complete — [title]
 File: docs/specs/<feature-slug>/v1.md
 
 Please review the spec. When ready:
-- Approve to freeze, update Plane, and optionally move to design
+- Approve to freeze and optionally move to design
 - Or give feedback to revise
 ```
 
-Wait for the user to read and respond. Do NOT update Plane yet.
+Wait for the user to read and respond.
 
 **3e. On approval**
 - User says "approved", "lgtm", "freeze it", etc.
 - PM sets status to "Ready for Architect"
-- Plane task updated: summary fields (Problem, Goals, AC, spec path) copied in, status → "Spec Ready"
-- If no Plane task existed: create one now with the summary
 - Then immediately ask:
 ```
-## Spec Frozen — PROJ-123: [title]
+## Spec Frozen — [title]
 File: docs/specs/<feature-slug>/v1.md
-Plane: updated
 
 Run /design for this spec now? (y/n)
 ```
@@ -109,7 +83,7 @@ Parallelizes writing while keeping Q&A interactive for quality. Each task mainta
 For each task, check for existing specs first (same as 3a). Then spawn one background `pm` subagent per task simultaneously. Each receives ONLY:
 - `CLAUDE.md`
 - `README.md` (if it contains product context)
-- The Plane task title and description
+- The feature name/description
 - Any existing related specs from `docs/specs/`
 - **Instruction:** Read all context, identify open questions and ambiguities, write them to `docs/specs/<slug>/_questions.md`. Do NOT write a spec yet. Do NOT ask the user — write questions to the file and terminate.
 
@@ -127,7 +101,7 @@ For each task in order:
 6. Move to the next task's Q&A
 
 ```
-## Q&A — Task 1 of N: PROJ-123 — [title]
+## Q&A — Task 1 of N: [title]
 
 The PM agent has the following questions:
 
@@ -139,7 +113,7 @@ Please answer these questions.
 
 After completing Q&A for a task, show:
 ```
-Q&A complete for PROJ-123. Moving to next task...
+Q&A complete for [title]. Moving to next task...
 ```
 
 #### Phase 3: Parallel spec writing (background)
@@ -147,7 +121,7 @@ Q&A complete for PROJ-123. Moving to next task...
 Spawn one background `pm` subagent per task simultaneously. Each receives ONLY:
 - `CLAUDE.md`
 - `README.md` (if it contains product context)
-- The Plane task title and description
+- The feature name/description
 - `docs/specs/<slug>/_questions.md` — the questions
 - `docs/specs/<slug>/_answers.md` — the user's answers
 - **Instruction:** Write the spec to `docs/specs/<slug>/v1.md` using the provided answers. Do NOT ask questions — they have been answered. If any remaining ambiguity exists, note it in the Open Questions section of the spec.
@@ -161,21 +135,21 @@ Present all drafted specs to the user:
 ```
 ## Spec Drafts Ready for Review
 
-### 1. PROJ-123: [title]
+### 1. [title]
 File: docs/specs/<slug-1>/v1.md
 [2-3 line summary of what the spec covers]
 
-### 2. PROJ-456: [title]
+### 2. [title]
 File: docs/specs/<slug-2>/v1.md
 [2-3 line summary of what the spec covers]
 
 Review each spec. For each, respond with:
 - "approved" / "lgtm" to freeze
-- Feedback to revise (reference by number or task ID)
+- Feedback to revise (reference by number)
 ```
 
 Process the user's response:
-- **Approved specs:** Freeze immediately — PM sets status to "Ready for Architect", update Plane (summary fields + status → "Spec Ready"), create Plane task if none existed
+- **Approved specs:** Freeze immediately — PM sets status to "Ready for Architect"
 - **Specs with feedback:** Write feedback to `docs/specs/<slug>/_feedback.md`
 
 #### Phase 5: Parallel revision (background, conditional)
@@ -194,10 +168,10 @@ After all specs are frozen:
 ```
 ## All Specs Frozen
 
-| Task | Spec | Status |
-|------|------|--------|
-| PROJ-123: [title] | docs/specs/<slug-1>/v1.md | Spec Ready |
-| PROJ-456: [title] | docs/specs/<slug-2>/v1.md | Spec Ready |
+| Feature | Spec | Status |
+|---------|------|--------|
+| [title] | docs/specs/<slug-1>/v1.md | Spec Ready |
+| [title] | docs/specs/<slug-2>/v1.md | Spec Ready |
 
 Run /design for all specs now? (y/n/select)
 ```

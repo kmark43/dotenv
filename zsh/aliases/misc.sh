@@ -4,7 +4,18 @@ alias gs="git status -sb"
 alias gundo="git reset --soft HEAD~1"
 alias gucommit="git add -A && git commit --amend --no-edit"
 alias gl="git log --oneline --graph --decorate -20"
-alias mux="tmuxinator"
+
+function mux () {
+  if [ "$1" = "start" ] && [ -n "$2" ] && [ -n "$3" ]; then
+    # mux start mealtime <worktree>
+    local project=$2
+    local worktree=$3
+    local root=~/Projects/$project/.worktrees/$worktree
+    tmuxinator start $project root="$root" session_name="${project}-${worktree}"
+  else
+    tmuxinator "$@"
+  fi
+}
 
 # commit-push
 # function compush () {

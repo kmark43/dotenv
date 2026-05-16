@@ -337,6 +337,7 @@ for f in "$DOTFILES_DIR/claude/commands/"*.md; do
   changed=true
 done
 symlink "$DOTFILES_DIR/claude/CLAUDE.md.template" "$HOME/.claude/CLAUDE.md.template"
+symlink "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 symlink "$DOTFILES_DIR/claude/WORKFLOW.md" "$HOME/.claude/WORKFLOW.md"
 
 if [ "$changed" = true ]; then

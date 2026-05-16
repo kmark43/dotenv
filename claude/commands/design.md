@@ -1,32 +1,24 @@
 Write architecture design(s) for: $ARGUMENTS
 
 Arguments can be:
-- A number: `/design 3` — top N "Spec Ready" tasks from Plane
-- Task IDs: `/design PROJ-123,PROJ-456` or `/design PROJ-123 | PROJ-456` — specific tasks (comma or `|` separated)
-- Multiple names: `/design "user auth" | "push notifications"` — each searched independently
-- A single feature name: `/design "user authentication"` — search Plane, confirm match
+- Multiple spec paths: `/design docs/specs/user-auth/v1.md | docs/specs/push-notifs/v1.md`
+- Multiple feature names: `/design "user auth" | "push notifications"` — each matched to a spec in `docs/specs/`
+- A single feature name: `/design "user authentication"` — matched to spec in `docs/specs/`
 - A spec path: `/design docs/specs/user-auth/v1.md` — use directly
 
 ## Instructions
 
-### Step 1: Resolve the task/spec list
+### Step 1: Resolve the spec list
 
-**If given a number N:**
-- Search Plane for top N tasks with status "Spec Ready" (by backlog priority order)
-- Display the list and wait for confirmation
-
-**If given task IDs (comma or `|` separated):**
-- Split on `,` or ` | ` to get individual IDs
-- Fetch each from Plane, read spec path from `**Spec:**` field in task description
+**If given multiple names or paths (`|` separated):**
+- Split on ` | ` to get individual entries
+- For names: fuzzy match against `docs/specs/` directory
+- For paths: confirm file exists
 - Display confirmed list and wait
 
-**If given multiple names (`|` separated):**
-- Split on ` | ` to get individual names
-- Treat each as a separate task — resolve, confirm, and process each in order (same flow as bulk task IDs)
-
 **If given a single feature name:**
-- Search prioritized backlog first, then full backlog
-- Present top 1-3 matches and wait for confirmation
+- Fuzzy match against `docs/specs/` directory
+- Present top match and confirm
 
 **If given a spec path directly:**
 - Confirm file exists, read feature name from it, proceed
@@ -43,8 +35,8 @@ Arguments can be:
 Run in a fresh subagent with clean context. Do not carry context from a prior spec session.
 
 **3a. Resolve spec path**
-- From the Plane task `**Spec:**` field, or from the directly provided path
-- If no spec path found in Plane task, report and stop
+- Use the directly provided path, or fuzzy match the feature name against `docs/specs/`
+- If no spec found, report and stop
 
 **3b. Check for existing design**
 - Check `docs/designs/<feature-slug>/` for an existing design
@@ -84,13 +76,10 @@ The architect operates in 4 phases — the command must not short-circuit any of
   Repeat until approved.
 
 **3e. On approval**
-- Plane task status → "Design Ready"
-- Design file path added to Plane task as comment
 - Output:
   ```
-  ## Design Approved — PROJ-123: [title]
+  ## Design Approved — [title]
   File: docs/designs/<feature-slug>/vN.md
-  Plane: updated
   ```
 
 **3f. Offer to continue to implementation (optional)**
@@ -99,7 +88,7 @@ Start implementation now? (y/n)
 ```
 - If yes: create git worktree first:
   ```bash
-  git worktree add .worktrees/<slug> feature/PROJ-123-<slug>
+  git worktree add .worktrees/<slug> feature/<slug>
 
   # Fix absolute paths → relative paths (required for devcontainer/mount compatibility)
   echo "gitdir: ../../.git/worktrees/<slug>" > .worktrees/<slug>/.git
@@ -136,7 +125,7 @@ For each task in order:
 6. Move to the next task's Q&A
 
 ```
-## Architect Q&A — Task 1 of N: PROJ-123 — [title]
+## Architect Q&A — Task 1 of N: [title]
 
 The architect has the following questions:
 
@@ -148,7 +137,7 @@ Please answer these questions.
 
 After completing Q&A for a task, show:
 ```
-Q&A complete for PROJ-123. Moving to next task...
+Q&A complete for [title]. Moving to next task...
 ```
 
 #### Phase 3: Parallel design writing (background)
@@ -170,21 +159,21 @@ Present all drafted designs to the user:
 ```
 ## Architecture Designs Ready for Review
 
-### 1. PROJ-123: [title]
+### 1. [title]
 File: docs/designs/<slug-1>/v1.md
 Key decisions: [2-3 bullet points]
 
-### 2. PROJ-456: [title]
+### 2. [title]
 File: docs/designs/<slug-2>/v1.md
 Key decisions: [2-3 bullet points]
 
 Review each design. For each, respond with:
 - "approved" / "lgtm" to freeze
-- Feedback to revise (reference by number or task ID)
+- Feedback to revise (reference by number)
 ```
 
 Process the user's response:
-- **Approved designs:** Update Plane (status → "Design Ready", add design path as comment)
+- **Approved designs:** Design is frozen
 - **Designs with feedback:** Write feedback to `docs/designs/<slug>/_feedback.md`
 
 #### Phase 5: Parallel revision (background, conditional)
@@ -219,10 +208,10 @@ After all designs are approved:
 ```
 ## All Designs Approved
 
-| Task | Design | Status |
-|------|--------|--------|
-| PROJ-123: [title] | docs/designs/<slug-1>/v1.md | Design Ready |
-| PROJ-456: [title] | docs/designs/<slug-2>/v1.md | Design Ready |
+| Feature | Design | Status |
+|---------|--------|--------|
+| [title] | docs/designs/<slug-1>/v1.md | Design Ready |
+| [title] | docs/designs/<slug-2>/v1.md | Design Ready |
 
 Start implementation now? (y/n/select)
 ```

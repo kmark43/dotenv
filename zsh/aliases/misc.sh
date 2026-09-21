@@ -17,6 +17,9 @@ function mux () {
   fi
 }
 
+alias start-mealtime="code ~/Projects/mealtime && code ~/Documents/obsidian/notes/less\ common\ folders/Designs && code ~/Documents/obsidian/notes/less\ common\ folders/tracking/mealtime"
+alias start-mutinies="code ~/Projects/mutinies && code ~/Documents/obsidian/notes/less\ common\ folders/Designs && code ~/Documents/obsidian/notes/less\ common\ folders/tracking/mutinies"
+
 # commit-push
 # function compush () {
 #     git add -A && git commit -m "$1" && git push -u origin HEAD
